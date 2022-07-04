@@ -1,0 +1,28 @@
+{
+  "name": "mjolnir-leaguecleaner",
+  "version": "1.0.0",
+  "description": "Mjolnir LeagueCleaner",
+  "main": "index.js",
+  "scripts": {
+    "Config-build-win": "electron-builder --config build-win.json",
+    "Config-release-win": "electron-builder --config build-win.json --publish always"
+  },
+  "author": "yomisana",
+  "license": "MPL",
+  "private": true,
+  "devDependencies": {
+    "electron": "19.0.6",
+    "electron-builder": "23.1.0"
+  },
+  "dependencies": {
+    "asarmor": "2.0.0",
+    "electron-log": "4.4.8",
+    "electron-updater": "^5.0.5",
+    "find-process": "^1.4.7",
+    "fs-extra": "^10.1.0",
+    "hi-base64": "^0.2.1",
+    "path": "^0.12.7",
+    "reinterval": "^1.1.0",
+    "request": "^2.88.2"
+  }
+}
