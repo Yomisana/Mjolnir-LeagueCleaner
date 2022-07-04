@@ -1,0 +1,26 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../css/mlc_splash.css" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <script src="../plugin/jquery.min.js"></script>
+    <script>
+      window.api.receive("update_percent", (progressData) => {
+        $(".progressbars > div").css('width',progressData+"%");
+      });
+
+      window.api.receive("update_status", (data) => {
+        $(".status").text(data);
+      });
+    </script>
+</head>
+  <body>
+    <div class="mask"></div>
+    <div class="main">
+      <h3 class ="noselect logotext"><img width="64" height="64" src="../img/mlc-logo-256.png" /> Mjolnir League Cleaner</h3>
+      <div class="loader"></div>
+      <div class="status"></div>
+      <div class="progressbars"><div></div></div>
+    </div>
+  </body>
+</html>
