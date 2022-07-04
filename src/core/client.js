@@ -1,10 +1,12 @@
 'use strict';
 require('./global');
+const killer = require('./killer');
 
 const find = require('find-process');
 const exec = require('child_process').exec;
 const fs = require('fs');
 const base64 = require('hi-base64');
+const request = require('request');
 
 const $ = {
     is_lol_client_open: function(){
@@ -16,8 +18,8 @@ const $ = {
                         client_dir = client_path.replace("LeagueClient.exe","");
                         if(client_dir && client_path != ""){
                             console.log('[INFO] 找到 LOL 客戶端');
-                            console.log('[INFO] 找到 LOL 客戶端(Path):' + client_path);
-                            console.log('[INFO] 找到 LOL 客戶端(Dir):' + client_dir + "\n");
+                            // console.log('[INFO] 找到 LOL 客戶端(Path):' + client_path);
+                            // console.log('[INFO] 找到 LOL 客戶端(Dir):' + client_dir + "\n");
                             mlc_main.webContents.send("client_is_found", client_status[1]);
                             client_is_found = true;
                             $.lockfile();
@@ -43,12 +45,6 @@ const $ = {
                     client_lockfile.lockfile_token = "";
                     client_lockfile.lockfile_method = null;
                     url_prefix = null;
-                    me.summoner_status = null;me.summoner_icon = 0;me.id = null;
-                    me.lol.gameQueueType = "";me.lol.level = "";me.lol.masteryScore = "";
-                    me.lol.timeStamp = ""; me.name = ""; me.pid = null;
-                    me.platformId = null;me.puuid = null;me.statusMessage = null;
-                    me.summonerId = null;gameflow = null;
-                    gameflow_ReadyCheck = false;gameflow_ChampSelect = false;
                     console.log("[INFO] Clean Data Done!");
                 }
             }
@@ -76,11 +72,42 @@ const $ = {
                 console.log("[INFO] LOL lockfile extraction done!");
     
                 url_prefix = client_lockfile.lockfile_method + "://127.0.0.1:" + client_lockfile.lockfile_port;
-                console.log("[INFO] api url:" + url_prefix);
-                console.log("Account: riot");
-                console.log("Passwd: " + lockfile[3]);
+                // console.log("[INFO] api url:" + url_prefix);
+                // console.log("Account: riot");
+                // console.log("Passwd: " + lockfile[3]);
                 console.log("[INFO] LOL api url extraction done!\n");
                 game_is_notfound = false; is_lockfile_get = true;
+                // 紀錄啟動時間
+                request.get({
+                    url: url_prefix + '/telemetry/v1/application-start-time',
+                    strictSSL: false,
+                    headers:{
+                        'Accept': 'application/json',
+                        'Authorization': client_lockfile.lockfile_token
+                    }
+                },
+                    function(err, httpResponse, body){
+                        try{
+                            let timestamp = JSON.parse(body);
+                            // console.log(timestamp);
+                            if(!garena_is_found){
+                                console.log("[INFO] LOL Client start time(first_active) log done!\n");
+                                client_active.first_active = timestamp;
+                                console.log(`第一次啟動: ${client_active.first_active}`);
+                                killer.is_garena_open();
+                            }else{
+                                console.log("[INFO] LOL Client start time(second_active) log done!\n");
+                                client_active.second_active = timestamp;
+                                console.log(`第二次啟動: ${client_active.second_active}`);
+                                // clean kill data
+                                garena_is_found = false;
+                            }
+                        }catch (error){
+                            console.error("[ERROR - 啟動時間] " + error);
+                            client_is_found = false;
+                        }
+                    }
+                );
             }catch(error){
                 client_is_found = false;client_is_notfound = false;is_lockfile_get = false;
                 console.error("[ERROR - lockfile] "+err);
@@ -107,21 +134,6 @@ const $ = {
     },
     clear_ipc: function(){
         mlc_main.webContents.send("client_is_found", client_status[0]);
-        // summoner
-        mlc_main.webContents.send("summoner_name", "Waiting...");
-        mlc_main.webContents.send("summoner_level", "Waiting...");
-        mlc_main.webContents.send("summoner_status", "Waiting...");
-        mlc_main.webContents.send("summoner_status_message", "Waiting...");
-        mlc_main.webContents.send("summoner_masteryScore", "Waiting...");
-        mlc_main.webContents.send("summoner_region", "Waiting...");
-        mlc_main.webContents.send("summoner_wallet_ip", "Waiting...");
-        mlc_main.webContents.send("summoner_wallet_rp", "Waiting...");
-        // game status
-        mlc_main.webContents.send("game_status", "Waiting...");
-        // summoner chat
-        mlc_main.webContents.send("champselect_chat", "");
-        // battle info 
-        mlc_main.webContents.send("battle_info", "");
     }
 }
 

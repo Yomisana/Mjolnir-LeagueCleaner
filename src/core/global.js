@@ -71,9 +71,10 @@ global.refresh_check_path_timer = { // check lol client path timer
     // garena found?
     global.garena_is_found = false;
     global.garena_is_notfound = false;
+    global.client_cmd = null;
     global.client_active = {
         first_active: null,
-        second_active: null
+        second_active: null,
     }
 
 
