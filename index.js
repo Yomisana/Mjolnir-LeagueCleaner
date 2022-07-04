@@ -106,7 +106,7 @@ app.whenReady().then(() => {
             let starterTimer = setInterval(()=>{
               if(mainWindowReady){
                 clearInterval(starterTimer);
-                mlc_main.show();
+                //mlc_main.show();
                 mlc_splash.close();
               }
             },100);
@@ -204,7 +204,7 @@ autoUpdater.on('update-not-available', (info) => {
   let starterTimer = setInterval(()=>{
     if(mainWindowReady){
       clearInterval(starterTimer);
-      mlc_main.show();
+      // mlc_main.show();
       mlc_splash.close();
     }
   },100);

@@ -59,6 +59,13 @@ const $ = {
                console.error("[ERROR] " + error);
            }                
         });
+        exec('taskkill /f /im gxxapphelper.exe',function (error, stdout, stderr) {
+            //console.log(stdout);
+           console.log("[INFO] 發送結束gxxapphelper主程序完畢!");
+           if(error){
+               console.error("[ERROR] " + error);
+           }                
+        });
         exec('taskkill /f /im LeagueClient.exe',function (error, stdout, stderr) {
             //console.log(stdout);
             console.log("[INFO] 發送結束LOL客戶端主程序完畢!");
