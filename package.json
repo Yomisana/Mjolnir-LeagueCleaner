@@ -1,6 +1,6 @@
 {
   "name": "mjolnir-leaguecleaner",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Mjolnir LeagueCleaner",
   "main": "index.js",
   "scripts": {
@@ -21,6 +21,7 @@
     "find-process": "^1.4.7",
     "fs-extra": "^10.1.0",
     "hi-base64": "^0.2.1",
+    "nodejs-fs-utils": "^1.2.6",
     "path": "^0.12.7",
     "reinterval": "^1.1.0",
     "request": "^2.88.2"

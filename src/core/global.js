@@ -7,6 +7,10 @@ const path = require('path');
  */
 
 // electron
+global.logstorage = {
+    storage: null,
+    type: null
+}
 global.permission = false;
 global.taskbar_tray = null; // Windows tray
 global.locate = null; // Window locate

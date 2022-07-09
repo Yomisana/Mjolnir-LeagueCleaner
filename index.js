@@ -9,6 +9,7 @@ const electronLogger = require('electron-log');
 const {autoUpdater} = require("electron-updater");
 const fs = require('fs-extra');
 const path = require('path');
+const fsutil = require("nodejs-fs-utils");
 
 // 區域宣告
 let isQuiting;
@@ -23,7 +24,7 @@ const $ = {
       app.quit();
       process.exit();
     },
-    taskbar: async function(win){
+    taskbar: function(){
         let type = (process.platform == "darwin")?'png':'ico';
 
         taskbar_tray = new Tray(path.join(__dirname,'./src/resource/img/taskbar/mlc-taskbar-32.'+type)); //MAX 32 MIN 16
@@ -46,6 +47,15 @@ const $ = {
             type: 'separator'
           },
           {
+            label: `Clean log (${logstorage.storage} ${logstorage.type})`, click: function () {
+              $.cleanlog();
+              console.log(`[INFO] 已經清除了 ${logstorage.storage} ${logstorage.type} 記錄檔了`);
+            }
+          },
+          {
+            type: 'separator'
+          },
+          {
             label: 'Quit Mjolnir League Cleaner', click: function () {
               $.closeApp();
             }
@@ -54,9 +64,43 @@ const $ = {
         //taskbar_tray.setToolTip(`Mjolnir League v.${version}`);
         taskbar_tray.setToolTip(`Mjolnir League Cleaner`);
         taskbar_tray.setContextMenu(contextMenu);
-
-        taskbar_tray.on('click', () => {
-          win.show();
+        // console.log(contextMenu.items[4].label);
+        taskbar_tray.on('click', async ()=>{
+          await $.calculatestorage();
+          const contextMenu = Menu.buildFromTemplate([
+            {
+              icon: path.join(__dirname,'./src/resource/img/taskbar/mlc-taskbar-contextmenu-16.png'), // 16 {右鍵後裡面的}
+              label: `Mjolnir League Cleaner v.${version}`,
+              enabled: false
+            },
+            {
+              type: 'separator'
+            },
+            {
+              label: 'Github', click: function () {
+                shell.openExternal("https://github.com/yomisana");
+                shell.openExternal("https://github.com/Yomisana/Mjolnir-LeagueCleaner");
+              }
+            },
+            {
+              type: 'separator'
+            },
+            {
+              label: `Clean log (${logstorage.storage} ${logstorage.type})`, click: function () {
+                $.cleanlog();
+                console.log(`[INFO] 已經清除了 ${logstorage.storage} ${logstorage.type} 記錄檔了`);
+              }
+            },
+            {
+              type: 'separator'
+            },
+            {
+              label: 'Quit Mjolnir League Cleaner', click: function () {
+                $.closeApp();
+              }
+            }
+          ]);
+          taskbar_tray.setContextMenu(contextMenu);
         });
     },
     showMessage: function(window, message, type, title){
@@ -65,6 +109,81 @@ const $ = {
           type: type,
           title: title
       });
+    },
+    calculatestorage:function(){
+        return new Promise((resolve,reject)=>{
+          fsutil.fsize(path.join(log_dir), {
+            countFolders: false
+          }, function (err, size) {
+              logstorage.storage = null; logstorage.type = "null";
+              // console.log(size); // bytes : 1024 bytes = 1KB
+              logstorage.storage = (size / 1024).toFixed();
+              logstorage.type = "KB";
+              if(logstorage.storage >= 1024){ // 1024 KB
+                let kbtomb = logstorage.storage
+                logstorage.storage = (kbtomb / 1024).toFixed();
+                logstorage.type = "MB";
+                if(logstorage.storage >= 1024){ // 1024 KB
+                  let mbtogb = logstorage.storage
+                  logstorage.storage = (mbtogb / 1024).toFixed();
+                  logstorage.type = "GB";
+                }
+              }
+              // console.log(`${(size / 1024).toFixed()}`);
+              console.log(`log folder size: ${logstorage.storage} ${logstorage.type}`);
+              resolve(true);
+          });
+        });
+    },
+    cleanlog: function(){
+      fs.readdir(path.join(log_dir), async (err, files) => {
+        if (err) {
+          console.error("[ERROR - Clean log] "+err);
+        }
+        for (const file of files) {
+          fs.unlink(path.join(log_dir, file), err => {
+            if (err) {
+              console.error("[ERROR - Ready Clean log] "+err);
+            }
+          });
+        }
+        // update tray contextMenu
+        await $.calculatestorage();
+        const contextMenu = Menu.buildFromTemplate([
+          {
+            icon: path.join(__dirname,'./src/resource/img/taskbar/mlc-taskbar-contextmenu-16.png'), // 16 {右鍵後裡面的}
+            label: `Mjolnir League Cleaner v.${version}`,
+            enabled: false
+          },
+          {
+            type: 'separator'
+          },
+          {
+            label: 'Github', click: function () {
+              shell.openExternal("https://github.com/yomisana");
+              shell.openExternal("https://github.com/Yomisana/Mjolnir-LeagueCleaner");
+            }
+          },
+          {
+            type: 'separator'
+          },
+          {
+            label: `Clean log (${logstorage.storage} ${logstorage.type})`, click: function () {
+              $.cleanlog();
+              console.log(`[INFO] 已經清除了 ${logstorage.storage} ${logstorage.type} 記錄檔了`);
+            }
+          },
+          {
+            type: 'separator'
+          },
+          {
+            label: 'Quit Mjolnir League Cleaner', click: function () {
+              $.closeApp();
+            }
+          }
+        ]);
+        taskbar_tray.setContextMenu(contextMenu);
+      });
     }
 }
 
@@ -72,24 +191,24 @@ app.whenReady().then(() => {
     locate = app.getLocale();
     software_version = `${version}`;
     mlc_splash = new BrowserWindow({
-        title: splash_set.title,
-        icon: window_icon,
-        autoHideMenuBar: true,
-        backgroundColor: window_BackgroundColor,
-        width: splash_set.width, height: splash_set.height,
-        minWidth: splash_set.min_width, minHeigh: splash_set.min_width,
-        maxWidth: splash_set.max_width, maxHeight: splash_set.max_height,
-        transparent: true,
-        titleBarStyle: 'hiddenInset',
-        frame: false,
-        show: false,
-        webPreferences:{
-            devTools: false,
-            fullscreenBoolean: false,
-            fullscreenableBoolean: false,
-            simpleFullscreenBoolean: false,
-            preload: __dirname + "/preload.js"
-        }
+      title: splash_set.title,
+      icon: window_icon,
+      autoHideMenuBar: true,
+      backgroundColor: window_BackgroundColor,
+      width: splash_set.width, height: splash_set.height,
+      minWidth: splash_set.min_width, minHeigh: splash_set.min_width,
+      maxWidth: splash_set.max_width, maxHeight: splash_set.max_height,
+      transparent: true,
+      titleBarStyle: 'hiddenInset',
+      frame: false,
+      show: false,
+      webPreferences:{
+          devTools: false,
+          fullscreenBoolean: false,
+          fullscreenableBoolean: false,
+          simpleFullscreenBoolean: false,
+          preload: __dirname + "/preload.js"
+      }
     });
 
     mlc_splash.loadFile('src/resource/html/mlc_splash.html');
@@ -97,73 +216,74 @@ app.whenReady().then(() => {
     mlc_splash.center();
 
     mlc_splash.once('ready-to-show', async () => {
-        mlc_splash.show();
+      mlc_splash.show();
 
-        if(app.isPackaged){
-            autoUpdater.checkForUpdatesAndNotify();
-        }
-        else{
-            let starterTimer = setInterval(()=>{
-              if(mainWindowReady){
-                clearInterval(starterTimer);
-                //mlc_main.show();
-                mlc_splash.close();
-              }
-            },100);
-        }
+      if(app.isPackaged){
+          autoUpdater.checkForUpdatesAndNotify();
+      }
+      else{
+          let starterTimer = setInterval(()=>{
+            if(mainWindowReady){
+              clearInterval(starterTimer);
+              //mlc_main.show();
+              mlc_splash.close();
+            }
+          },100);
+      }
     });
 
     //主畫面
     mlc_main = new BrowserWindow
     ({
-        title: main_set.title,
-        icon: window_icon,
-        autoHideMenuBar: true,
-        //resizable: false,
-        width: main_set.width, height: main_set.height,
-        minWidth: main_set.min_width,
-        minHeight: main_set.min_height,
-        //maxWidth: main_set.max_width, maxHeight: main_set.max_height,
-        titleBarStyle: 'hiddenInset',
-        frame: true,
-        show: false,
-        webPreferences: {
-            devTools: false,
-            fullscreenBoolean: false,
-            fullscreenableBoolean: false,
-            simpleFullscreenBoolean: false,
-            nodeIntegration: true,
-            contextIsolation: true,
-            enableRemoteModule: false, // turn off remote
-            preload: __dirname + "/preload.js" // use a preload script
-        }
+      title: main_set.title,
+      icon: window_icon,
+      autoHideMenuBar: true,
+      //resizable: false,
+      width: main_set.width, height: main_set.height,
+      minWidth: main_set.min_width,
+      minHeight: main_set.min_height,
+      //maxWidth: main_set.max_width, maxHeight: main_set.max_height,
+      titleBarStyle: 'hiddenInset',
+      frame: true,
+      show: false,
+      webPreferences: {
+          devTools: false,
+          fullscreenBoolean: false,
+          fullscreenableBoolean: false,
+          simpleFullscreenBoolean: false,
+          nodeIntegration: true,
+          contextIsolation: true,
+          enableRemoteModule: false, // turn off remote
+          preload: __dirname + "/preload.js" // use a preload script
+      }
     });
 
     mlc_main.setMenu(null);
     mlc_main.loadFile('src/resource/html/mlc_main.html');
 
-    mlc_main.once('ready-to-show', () => {
-        console.log("[INFO] 版本: ", software_version);
-        console.log(`[INFO] 主畫面渲染完畢`);
-        mainWindowReady = true;
-        $.taskbar(mlc_main);
-        require('./src/core/permission');
+    mlc_main.once('ready-to-show', async () => {
+      console.log("[INFO] 版本: ", software_version);
+      console.log(`[INFO] 主畫面渲染完畢`);
+      mainWindowReady = true;
+      await $.calculatestorage();
+      $.taskbar();
+      require('./src/core/permission');
     });
 
     // 主畫面最小化時
     mlc_main.on('minimize', (event) => {
-        //if(pid)
-        event.preventDefault();
-        mlc_main.hide();
+      //if(pid)
+      event.preventDefault();
+      mlc_main.hide();
     });
 
       // 主畫面將要關閉時
     mlc_main.on('close', (event) => {
-        if (!isQuiting) {
-          event.preventDefault();
-          mlc_main.hide();
-          event.returnValue = false;
-        }
+      if (!isQuiting) {
+        event.preventDefault();
+        mlc_main.hide();
+        event.returnValue = false;
+      }
     });
 });
 
