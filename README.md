@@ -11,7 +11,8 @@ Garena Killer
 [![Windows](https://img.shields.io/static/v1?style=for-the-badge&message=Windows&color=0078D6&logo=Windows&logoColor=FFFFFF&label=7/8/8.1/10/11+(x64))](https://www.microsoft.com/zh-tw/)
 [![MPL](https://img.shields.io/static/v1?style=for-the-badge&message=MPL&color=Green&label=LICENSE)]()
 # 軟體歷史
-- [2022/07/04] 軟體誕生日
+- [2022/07/04] 軟體誕生日  
+- [2023/01/22] 軟體不會被消失，但是轉移到 Riot 直營後我就不知道這軟體能不能用.
 # 功能
 - 電腦端
     - 就和 [Discord](https://discord.com) 一樣不小心關閉視窗也會在系統小圖示列可以找到喔! ✔
